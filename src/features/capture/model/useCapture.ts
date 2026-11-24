@@ -18,6 +18,8 @@ interface CapturedAudio extends TimeRange {
 interface CaptureEvents {
   onFrame: (time: number, samples: Float32Array, rate: number) => void
   onComplete: (result: CapturedAudio) => Promise<void>
+  /** Fired when a take actually starts, after the microphone is live. */
+  onStart?: (target: CaptureTarget, position: number) => void
   position: () => number
 }
 
@@ -47,6 +49,12 @@ export function useCapture(events: CaptureEvents) {
     }
   }
 
+  function live(target: CaptureTarget, stream: Input) {
+    active = { ...target, inputStart: stream.clock(), songStart: events.position(), frames: [] }
+    status.value = 'recording'
+    events.onStart?.(target, active.songStart)
+  }
+
   async function start(target: CaptureTarget, preparePlayback: () => Promise<boolean>) {
     if (status.value !== 'idle') return
     const token = ++request
@@ -64,14 +72,33 @@ export function useCapture(events: CaptureEvents) {
         if (input === stream) cancelRequest()
         return
       }
-      active = { ...target, inputStart: stream.clock(), songStart: events.position(), frames: [] }
-      status.value = 'recording'
+      live(target, stream)
     } catch (error) {
       if (token !== request) return
       cancelRequest()
       issue.value = error instanceof DOMException && error.name === 'NotAllowedError'
         ? '麦克风权限未开启。' : '无法开启麦克风，请检查设备和访问权限。'
     }
+  }
+
+  /**
+   * Begin a new take on the microphone that is already open (after a seek or
+   * a loop wrap). The accompaniment keeps running; only the take boundary
+   * moves, so the guide sees a fresh pass with fresh evidence.
+   */
+  async function resume(target: CaptureTarget): Promise<boolean> {
+    if (status.value !== 'idle' || !input) return false
+    live(target, input)
+    return true
+  }
+
+  /** Release a microphone kept open between takes. */
+  function release() {
+    // Only the owner of an idle capture may close it: a release racing a
+    // save (or the microphone handshake) would orphan the take.
+    if (status.value !== 'idle') return
+    input?.close()
+    input = null
   }
 
   function cancelRequest() {
@@ -82,26 +109,31 @@ export function useCapture(events: CaptureEvents) {
     status.value = 'idle'
   }
 
-  async function stop(position: number) {
-    if (status.value !== 'recording' || !active || !input) return
+  async function stop(position: number, options: { keepInput?: boolean } = {}) {
+    if (status.value !== 'recording' || !active || !input) return false
     status.value = 'saving'
     const recording = active
     const stream = input
+    const keepInput = options.keepInput ?? false
     const end = Math.max(recording.songStart, Math.min(position, recording.range.end))
     const duration = end - recording.songStart
     try {
       await stream.flush()
       if (duration < 0.2 || !recording.frames.length) {
         issue.value = '录音少于 0.2 秒，未保存。'
-        return
+        return false
       }
       const audio = toWave(recording.frames, recording.inputStart, duration, stream.sampleRate)
       await events.onComplete({ audio, start: recording.songStart, end, songId: recording.songId, lineId: recording.lineId })
+      return true
     } catch {
       issue.value = '录音未能保存。'
+      return false
     } finally {
-      stream.close()
-      if (input === stream) input = null
+      if (!keepInput) {
+        stream.close()
+        if (input === stream) input = null
+      }
       active = null
       level.value = 0
       status.value = 'idle'
@@ -113,5 +145,5 @@ export function useCapture(events: CaptureEvents) {
     if (status.value !== 'saving') input?.close()
     input = null
   })
-  return { status, issue, level, start, stop, cancelRequest }
+  return { status, issue, level, start, resume, stop, cancelRequest, release }
 }

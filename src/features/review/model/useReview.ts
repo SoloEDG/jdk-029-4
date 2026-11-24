@@ -2,7 +2,13 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch, type Ref 
 import type { LyricLine, Song, Take } from '../../../shared/document'
 import { readTakes, writeTake } from '../lib/archive'
 
-export function useReview(song: Ref<Song>, line: Ref<LyricLine | null>, beforeListen: () => void) {
+interface ReviewHooks {
+  /** Attach the guide companions for a take being listened to. */
+  onListen?: (take: Take) => void
+  onStop?: () => void
+}
+
+export function useReview(song: Ref<Song>, line: Ref<LyricLine | null>, beforeListen: () => void, hooks: ReviewHooks = {}) {
   const takes = shallowRef<Take[]>([])
   const ids = ref<[string | null, string | null]>([null, null])
   const playingId = ref<string | null>(null)
@@ -16,6 +22,7 @@ export function useReview(song: Ref<Song>, line: Ref<LyricLine | null>, beforeLi
   const slots = computed(() => ids.value.map(id => visible.value.find(take => take.id === id)))
 
   function stop() {
+    hooks.onStop?.()
     player.pause()
     cancelAnimationFrame(frame)
     if (source) {
@@ -49,7 +56,9 @@ export function useReview(song: Ref<Song>, line: Ref<LyricLine | null>, beforeLi
     player.src = source
     try {
       await player.play()
-      if (source === ownUrl) tick()
+      if (source !== ownUrl) return
+      hooks.onListen?.(take)
+      tick()
     } catch {
       if (source !== ownUrl) return
       stop()
@@ -87,5 +96,5 @@ export function useReview(song: Ref<Song>, line: Ref<LyricLine | null>, beforeLi
   })
   player.addEventListener('ended', stop)
   onBeforeUnmount(() => { player.removeEventListener('ended', stop); stop() })
-  return { visible, slots, playingId, position, issue, save, choose, listen, stop }
+  return { visible, slots, playingId, position, issue, player, save, choose, listen, stop }
 }

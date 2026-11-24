@@ -5,11 +5,12 @@ import { LyricStage, PhraseList } from '../features/lyrics'
 import { RecordControls } from '../features/capture'
 import { PitchPanel } from '../features/pitch'
 import { ReviewPanel } from '../features/review'
+import { GuideMini, GuidePanel } from '../features/guide'
 import { useWorkspace } from './useWorkspace'
 
 const {
-  transport, lyrics, pitch, review, capture, graphRange, graphPosition,
-  selectLine, adjacent, selectSong, seek, toggleLoop, togglePlay, toggleRecording, listen,
+  transport, lyrics, pitch, review, capture, guide, graphRange, graphPosition,
+  selectLine, adjacent, selectSong, seek, toggleLoop, togglePlay, toggleRecording, listen, auditionGuide,
 } = useWorkspace()
 </script>
 
@@ -29,6 +30,10 @@ const {
       <SongHeading :song="transport.song.value" />
       <LyricStage :selected="lyrics.selected.value" :active="lyrics.active.value" :upcoming="lyrics.upcoming.value"
         :playing="transport.isPlaying.value" :progress="lyrics.lineProgress.value" />
+      <GuidePanel :line="lyrics.selected.value" :snapshot="guide.snapshot.value" :pairs="guide.pairs.value"
+        :events="guide.events.value" :auditioning="guide.auditioning.value" :enabled="guide.enabled.value"
+        :volume="guide.volume.value"
+        @audition="auditionGuide" @toggle="guide.setEnabled(!guide.enabled.value)" @volume="guide.setVolume" />
       <PitchPanel :notes="transport.song.value.notes" :position="graphPosition" :range="graphRange"
         :latest="capture.status.value === 'recording' ? pitch.latest.value : null"
         :live="capture.status.value === 'recording' ? pitch.points.value : []"
@@ -38,7 +43,8 @@ const {
         @toggle="togglePlay" @previous="adjacent(-1)" @next="adjacent(1)" @loop="toggleLoop"
         @seek="seek" @volume="transport.setVolume" />
       <RecordControls :status="capture.status.value" :issue="capture.issue.value" :level="capture.level.value"
-        :selected="lyrics.selected.value" @toggle="toggleRecording" />
+        :selected="lyrics.selected.value" :guide="guide.snapshot.value" :auditioning="guide.auditioning.value"
+        :pairs="guide.pairs.value" @toggle="toggleRecording" />
     </div>
     <aside class="right-rail">
       <ReviewPanel :takes="review.visible.value" :slots="review.slots.value" :active-id="review.playingId.value"

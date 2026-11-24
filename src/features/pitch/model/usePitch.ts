@@ -10,7 +10,9 @@ export function usePitch() {
   })
 
   function receive(time: number, samples: Float32Array, rate: number) {
-    points.value = [...points.value, { time, midi: samplePitch(samples, rate) }]
+    const midi = samplePitch(samples, rate)
+    points.value = [...points.value, { time, midi }]
+    return midi
   }
 
   function slice(range: TimeRange) {

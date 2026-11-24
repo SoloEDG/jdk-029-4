@@ -236,3 +236,73 @@ input[type=range]::-moz-range-thumb { border: none; background: var(--gold); wid
 @media (prefers-reduced-motion: reduce) {
   button, select { transition: none; }
 }
+
+/* ---- guide vocal ---- */
+.guide-panel {
+  border: 1px solid #444132; border-radius: 7px; margin-top: 12px;
+  background: linear-gradient(111deg, #23281f, #20241d 78%);
+}
+.guide-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px 14px;
+  padding: 9px 15px 8px; border-bottom: 1px solid #33372d; flex-wrap: wrap;
+}
+.guide-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ghost-button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px;
+  border: 1px solid #575648; border-radius: 5px; background: #272b22; font-size: 11px; white-space: nowrap;
+}
+.ghost-button:hover { background: #3a3d30; }
+.ghost-button.on { border-color: #8b7041; color: var(--gold); background: #3b3221; }
+.ghost-button.audition { color: var(--green); border-color: #4d5c40; }
+.guide-volume { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+.guide-volume input { width: 54px; }
+.guide-body { display: flex; gap: 16px; padding: 10px 15px 11px; flex-wrap: wrap; }
+.guide-status { flex: 1 1 180px; min-width: 0; }
+.guide-phase { font-size: 12px; font-weight: 700; color: var(--gold); }
+.guide-phase[data-phase="yielding"] { color: var(--green); }
+.guide-phase[data-phase="ended"], .guide-phase[data-phase="idle"] { color: var(--muted); }
+.guide-line-name { font-size: 13px; margin-top: 3px; overflow-wrap: anywhere; }
+.guide-confirm, .guide-next {
+  display: flex; align-items: center; gap: 5px; margin-top: 6px; color: var(--muted); font-size: 11px;
+}
+.guide-confirm { color: var(--green); }
+.guide-pairs { flex: 2 1 260px; min-width: 0; }
+.guide-pairs-title { color: var(--soft); font-size: 10px; letter-spacing: .04em; margin-bottom: 4px; }
+.guide-pair { border-top: 1px solid #303329; }
+.guide-pair li { display: flex; align-items: center; gap: 7px; padding: 4px 0; font-size: 11px; min-width: 0; }
+.pair-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pair-dot.attack { background: var(--gold); }
+.pair-dot.settle { background: #85cbd5; }
+.pair-copy { display: flex; align-items: baseline; gap: 6px; }
+.pair-copy strong { font-size: 11px; font-weight: 600; }
+.pair-copy small { color: var(--soft); font-size: 10px; }
+.pair-ok { color: var(--soft); font-size: 10px; margin-left: auto; text-align: right; }
+.pair-flag { display: inline-flex; align-items: center; gap: 3px; color: var(--coral); font-size: 10px; margin-left: auto; }
+.guide-log { display: grid; gap: 2px; padding: 7px 15px 10px; border-top: 1px solid #33372d; }
+.guide-log li { display: grid; grid-template-columns: 46px 52px minmax(0, 1fr); gap: 6px; align-items: baseline; font-size: 10px; }
+.log-time { color: var(--soft); }
+.log-kind { color: var(--muted); font-weight: 600; }
+.log-kind.pickup, .log-kind.cue { color: var(--gold); }
+.log-kind.yield { color: var(--green); }
+.log-kind.miss, .log-kind.skip { color: var(--coral); }
+.log-detail { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.guide-mini { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 10px; flex-wrap: wrap; }
+.mini-state { display: inline-flex; align-items: center; gap: 4px; color: var(--soft); }
+.mini-state[data-phase="pickup"], .mini-state[data-phase="prompting"] { color: var(--gold); }
+.mini-state[data-phase="yielding"] { color: var(--green); }
+.mini-state.audition { color: var(--green); }
+.mini-confirm { color: var(--green); }
+.mini-next { color: var(--soft); }
+.mini-pair { display: inline-flex; gap: 3px; align-items: center; }
+.mini-dot { width: 5px; height: 5px; border-radius: 50%; }
+.mini-dot.attack { background: var(--gold); }
+.mini-dot.settle { background: #85cbd5; }
+.mini-dot.muted { opacity: .3; }
+
+.take-guide { display: inline-flex; align-items: center; gap: 2px; color: var(--gold); font-size: 10px; }
+@media (max-width: 660px) {
+  .guide-body { gap: 9px; padding: 9px 11px; }
+  .guide-heading { padding: 8px 11px; }
+  .guide-log { padding: 7px 11px 9px; }
+}

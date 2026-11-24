@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { AudioLines, GitCompareArrows, Headphones, Play, Square } from '@lucide/vue'
+import { AudioLines, GitCompareArrows, Headphones, Play, Square, Waypoints } from '@lucide/vue'
 import type { GuideNote, LyricLine, Take } from '../../../shared/document'
 import { clockLabel } from '../../../shared/time'
+import { guideSummary } from '../../guide'
 import { accuracy } from '../lib/summary'
 
 defineProps<{ takes: Take[]; slots: (Take | undefined)[]; activeId: string | null; selected: LyricLine | null; notes: GuideNote[]; issue: string }>()
@@ -22,6 +23,9 @@ const slotIndices = [0, 1] as const
         </button>
         <div class="take-info"><strong>录音 {{ takes.length - index }}</strong>
           <small class="mono">{{ clockLabel(take.start, true) }}–{{ clockLabel(take.end, true) }}</small></div>
+        <span v-if="take.guide?.length" class="take-guide" :title="`导唱实际播出的提示 ${guideSummary(take.guide).prompts} 处`">
+          <Waypoints :size="11" /> {{ guideSummary(take.guide).prompts }}
+        </span>
         <span class="mono take-score" title="检测到的音高中命中参考音的占比">{{ accuracy(take, notes) ?? '—' }}<template v-if="accuracy(take, notes) !== null">%</template></span>
       </li>
     </ol>
